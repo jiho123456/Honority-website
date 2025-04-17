@@ -255,7 +255,7 @@ menu = st.sidebar.radio("", [
 # ---------------------------
 # 5) 공통 헤더
 # ---------------------------
-st.image("logo.jpg", width=200)
+st.image("assets/logo.jpg", width=200)
 st.title("Honority English Academy")
 st.write("영어 독서·토론을 통한 학습 커뮤니티입니다.")
 
