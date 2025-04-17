@@ -17,129 +17,129 @@ def init_db():
         dbname=st.secrets["dbname"]
     )
     conn.autocommit = True
-    c = conn.cursor()
+    # c = conn.cursor()
 
-    # users, kicked_users
-    c.execute("""
-    CREATE TABLE IF NOT EXISTS users (
-      id SERIAL PRIMARY KEY,
-      username TEXT UNIQUE,
-      password TEXT,
-      role TEXT DEFAULT '학생'
-    );
-    """)
-    c.execute("""
-    CREATE TABLE IF NOT EXISTS kicked_users (
-      username TEXT PRIMARY KEY,
-      reason TEXT NOT NULL,
-      kicked_at TIMESTAMPTZ DEFAULT now()
-    );
-    """)
+    # # users, kicked_users
+    # c.execute("""
+    # CREATE TABLE IF NOT EXISTS users (
+    #   id SERIAL PRIMARY KEY,
+    #   username TEXT UNIQUE,
+    #   password TEXT,
+    #   role TEXT DEFAULT '학생'
+    # );
+    # """)
+    # c.execute("""
+    # CREATE TABLE IF NOT EXISTS kicked_users (
+    #   username TEXT PRIMARY KEY,
+    #   reason TEXT NOT NULL,
+    #   kicked_at TIMESTAMPTZ DEFAULT now()
+    # );
+    # """)
 
-    # chatting room
-    c.execute("""
-    CREATE TABLE IF NOT EXISTS chat_messages (
-      id SERIAL PRIMARY KEY,
-      nickname TEXT,
-      message TEXT,
-      timestamp TIMESTAMPTZ
-    );
-    """)
+    # # chatting room
+    # c.execute("""
+    # CREATE TABLE IF NOT EXISTS chat_messages (
+    #   id SERIAL PRIMARY KEY,
+    #   nickname TEXT,
+    #   message TEXT,
+    #   timestamp TIMESTAMPTZ
+    # );
+    # """)
 
-    # homeworks
-    c.execute("""
-    CREATE TABLE IF NOT EXISTS homeworks (
-      id SERIAL PRIMARY KEY,
-      assignment TEXT,
-      due_date DATE,
-      posted_by TEXT,
-      timestamp TIMESTAMPTZ
-    );
-    """)
+    # # homeworks
+    # c.execute("""
+    # CREATE TABLE IF NOT EXISTS homeworks (
+    #   id SERIAL PRIMARY KEY,
+    #   assignment TEXT,
+    #   due_date DATE,
+    #   posted_by TEXT,
+    #   timestamp TIMESTAMPTZ
+    # );
+    # """)
 
-    # book & debate topic
-    c.execute("""
-    CREATE TABLE IF NOT EXISTS book_topics (
-      id SERIAL PRIMARY KEY,
-      book_title TEXT,
-      debate_topic TEXT,
-      timestamp TIMESTAMPTZ
-    );
-    """)
+    # # book & debate topic
+    # c.execute("""
+    # CREATE TABLE IF NOT EXISTS book_topics (
+    #   id SERIAL PRIMARY KEY,
+    #   book_title TEXT,
+    #   debate_topic TEXT,
+    #   timestamp TIMESTAMPTZ
+    # );
+    # """)
 
-    # 추천 도구
-    c.execute("""
-    CREATE TABLE IF NOT EXISTS recommendations (
-      id SERIAL PRIMARY KEY,
-      tool_name TEXT,
-      description TEXT,
-      url TEXT,
-      timestamp TIMESTAMPTZ
-    );
-    """)
+    # # 추천 도구
+    # c.execute("""
+    # CREATE TABLE IF NOT EXISTS recommendations (
+    #   id SERIAL PRIMARY KEY,
+    #   tool_name TEXT,
+    #   description TEXT,
+    #   url TEXT,
+    #   timestamp TIMESTAMPTZ
+    # );
+    # """)
 
-    # word of the day
-    c.execute("""
-    CREATE TABLE IF NOT EXISTS word_of_day (
-      day DATE PRIMARY KEY,
-      word TEXT,
-      definition TEXT
-    );
-    """)
+    # # word of the day
+    # c.execute("""
+    # CREATE TABLE IF NOT EXISTS word_of_day (
+    #   day DATE PRIMARY KEY,
+    #   word TEXT,
+    #   definition TEXT
+    # );
+    # """)
 
-    # class schedule
-    c.execute("""
-    CREATE TABLE IF NOT EXISTS class_schedule (
-      id SERIAL PRIMARY KEY,
-      day_of_week TEXT,
-      time_slot TEXT,
-      subject TEXT
-    );
-    """)
+    # # class schedule
+    # c.execute("""
+    # CREATE TABLE IF NOT EXISTS class_schedule (
+    #   id SERIAL PRIMARY KEY,
+    #   day_of_week TEXT,
+    #   time_slot TEXT,
+    #   subject TEXT
+    # );
+    # """)
 
-    # learning materials
-    c.execute("""
-    CREATE TABLE IF NOT EXISTS materials (
-      id SERIAL PRIMARY KEY,
-      title TEXT,
-      description TEXT,
-      file_url TEXT,
-      uploaded_by TEXT,
-      timestamp TIMESTAMPTZ
-    );
-    """)
+    # # learning materials
+    # c.execute("""
+    # CREATE TABLE IF NOT EXISTS materials (
+    #   id SERIAL PRIMARY KEY,
+    #   title TEXT,
+    #   description TEXT,
+    #   file_url TEXT,
+    #   uploaded_by TEXT,
+    #   timestamp TIMESTAMPTZ
+    # );
+    # """)
 
-    # essay uploads
-    c.execute("""
-    CREATE TABLE IF NOT EXISTS essays (
-      id SERIAL PRIMARY KEY,
-      username TEXT,
-      file_path TEXT,
-      timestamp TIMESTAMPTZ
-    );
-    """)
+    # # essay uploads
+    # c.execute("""
+    # CREATE TABLE IF NOT EXISTS essays (
+    #   id SERIAL PRIMARY KEY,
+    #   username TEXT,
+    #   file_path TEXT,
+    #   timestamp TIMESTAMPTZ
+    # );
+    # """)
 
-    # newbery books ratings
-    c.execute("""
-    CREATE TABLE IF NOT EXISTS newbery_books (
-      id SERIAL PRIMARY KEY,
-      title TEXT,
-      discussion_date DATE,
-      rating INTEGER
-    );
-    """)
+    # # newbery books ratings
+    # c.execute("""
+    # CREATE TABLE IF NOT EXISTS newbery_books (
+    #   id SERIAL PRIMARY KEY,
+    #   title TEXT,
+    #   discussion_date DATE,
+    #   rating INTEGER
+    # );
+    # """)
 
-    # debate articles
-    c.execute("""
-    CREATE TABLE IF NOT EXISTS debate_articles (
-      id SERIAL PRIMARY KEY,
-      title TEXT,
-      url TEXT,
-      shared_by TEXT,
-      timestamp TIMESTAMPTZ
-    );
-    """)
-
+    # # debate articles
+    # c.execute("""
+    # CREATE TABLE IF NOT EXISTS debate_articles (
+    #   id SERIAL PRIMARY KEY,
+    #   title TEXT,
+    #   url TEXT,
+    #   shared_by TEXT,
+    #   timestamp TIMESTAMPTZ
+    # );
+    # """)
+    
     return conn
 
 conn = init_db()
