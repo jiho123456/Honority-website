@@ -139,7 +139,7 @@ def init_db():
     #   timestamp TIMESTAMPTZ
     # );
     # """)
-    
+
     return conn
 
 conn = init_db()
@@ -237,7 +237,7 @@ menu = st.sidebar.radio("페이지 선택", pages)
 # ---------------------------
 # 5) 헤더
 # ---------------------------
-st.image("assets/honority_logo.png", width=200)
+st.image("assets/logo.jpg", width=200)
 st.title("🏅 Honority English Academy")
 
 # ---------------------------
