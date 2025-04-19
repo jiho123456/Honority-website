@@ -498,6 +498,6 @@ elif menu == "👩‍🏫 선생님 페이지":
             )
             st.success(f"✅ {selected_user}님의 역할이 '{new_role}' 로 변경되었습니다.")
             # 변경 후 화면 갱신
-            st.experimental_rerun()
+            st.rerun()
     else:
         st.info("등록된 사용자가 없습니다.")
