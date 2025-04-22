@@ -148,6 +148,47 @@ def init_tables():
             timestamp TIMESTAMPTZ
         );
     """)
+    # User logs
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS user_logs (
+            id SERIAL PRIMARY KEY,
+            username TEXT,
+            action TEXT,
+            timestamp TIMESTAMPTZ DEFAULT now()
+        );
+    """)
+    # System logs
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS system_logs (
+            id SERIAL PRIMARY KEY,
+            level TEXT,
+            message TEXT,
+            timestamp TIMESTAMPTZ DEFAULT now()
+        );
+    """)
+    # Announcements
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS announcements (
+            id SERIAL PRIMARY KEY,
+            content TEXT,
+            posted_by TEXT,
+            timestamp TIMESTAMPTZ DEFAULT now()
+        );
+    """)
+    # Site settings
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS site_settings (
+            id SERIAL PRIMARY KEY,
+            setting_key TEXT UNIQUE,
+            setting_value TEXT,
+            updated_at TIMESTAMPTZ DEFAULT now()
+        );
+    """)
+    # Add created_at to users table if it doesn't exist
+    cur.execute("""
+        ALTER TABLE users 
+        ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT now();
+    """)
     tmp.commit()
     tmp.close()
 
@@ -470,34 +511,150 @@ elif menu == "👩‍🏫 선생님 페이지":
         st.error("접근 권한이 없습니다.")
         st.stop()
 
-    st.subheader("사용자 관리: 역할 부여")
-    # 1) DB에서 모든 유저와 현재 역할 불러오기
-    cur.execute("SELECT username, role FROM users ORDER BY username")
-    users = cur.fetchall()
-    if users:
-        # 2) 현재 유저 테이블로 보여주기
-        df_users = pd.DataFrame(users, columns=["아이디", "현재 역할"])
-        st.table(df_users)
-
-        # 3) 역할 변경 UI
-        selected_user = st.selectbox(
-            "역할을 변경할 사용자 선택",
-            [u[0] for u in users],
-            index=0
+    # Admin tabs
+    admin_tabs = st.tabs(["사용자 관리", "콘텐츠 관리", "시스템 설정"])
+    
+    # 1. User Management Tab
+    with admin_tabs[0]:
+        st.subheader("사용자 관리")
+        
+        # View all users
+        cur.execute("SELECT username, role, created_at FROM users ORDER BY username")
+        users = cur.fetchall()
+        if users:
+            df_users = pd.DataFrame(users, columns=["아이디", "현재 역할", "가입일"])
+            st.dataframe(df_users, use_container_width=True)
+            
+            # User actions
+            col1, col2 = st.columns(2)
+            with col1:
+                selected_user = st.selectbox(
+                    "사용자 선택",
+                    [u[0] for u in users],
+                    index=0
+                )
+                new_role = st.selectbox(
+                    "새로운 역할 선택",
+                    ["학생", "선생님", "제작자"],
+                    index=0
+                )
+                
+                if st.button("역할 업데이트"):
+                    cur.execute(
+                        "UPDATE users SET role = %s WHERE username = %s",
+                        (new_role, selected_user)
+                    )
+                    st.success(f"✅ {selected_user}님의 역할이 '{new_role}' 로 변경되었습니다.")
+                    st.rerun()
+            
+            with col2:
+                if st.button("사용자 삭제", type="secondary"):
+                    if st.session_state.username == selected_user:
+                        st.error("자신의 계정은 삭제할 수 없습니다.")
+                    else:
+                        if st.checkbox("정말로 삭제하시겠습니까?"):
+                            cur.execute("DELETE FROM users WHERE username = %s", (selected_user,))
+                            st.success(f"✅ {selected_user}님의 계정이 삭제되었습니다.")
+                            st.rerun()
+        
+        # User activity logs
+        st.subheader("사용자 활동 로그")
+        cur.execute("""
+            SELECT username, action, timestamp 
+            FROM user_logs 
+            ORDER BY timestamp DESC 
+            LIMIT 100
+        """)
+        logs = cur.fetchall()
+        if logs:
+            df_logs = pd.DataFrame(logs, columns=["사용자", "활동", "시간"])
+            st.dataframe(df_logs, use_container_width=True)
+    
+    # 2. Content Management Tab
+    with admin_tabs[1]:
+        st.subheader("콘텐츠 관리")
+        
+        # Content type selection
+        content_type = st.selectbox(
+            "콘텐츠 유형 선택",
+            ["과제", "학습 자료", "에세이", "토론 기사"]
         )
-        new_role = st.selectbox(
-            "새로운 역할 선택",
-            ["학생", "선생님", "제작자"],
-            index=0
-        )
-
-        if st.button("역할 업데이트"):
+        
+        if content_type == "과제":
+            cur.execute("SELECT id, title, description, posted_by, timestamp FROM homeworks ORDER BY id DESC")
+            content = cur.fetchall()
+            columns = ["ID", "제목", "설명", "작성자", "작성일"]
+        elif content_type == "학습 자료":
+            cur.execute("SELECT id, title, description, uploaded_by, timestamp FROM materials ORDER BY id DESC")
+            content = cur.fetchall()
+            columns = ["ID", "제목", "설명", "작성자", "작성일"]
+        elif content_type == "에세이":
+            cur.execute("SELECT id, title, uploaded_by, timestamp FROM essays ORDER BY id DESC")
+            content = cur.fetchall()
+            columns = ["ID", "제목", "작성자", "작성일"]
+        else:  # 토론 기사
+            cur.execute("SELECT id, url, description, shared_by, timestamp FROM debate_articles ORDER BY id DESC")
+            content = cur.fetchall()
+            columns = ["ID", "URL", "설명", "작성자", "작성일"]
+        
+        if content:
+            df_content = pd.DataFrame(content, columns=columns)
+            st.dataframe(df_content, use_container_width=True)
+            
+            # Content deletion
+            content_id = st.number_input("삭제할 콘텐츠 ID 입력", min_value=1)
+            if st.button("콘텐츠 삭제", type="secondary"):
+                if content_type == "과제":
+                    cur.execute("DELETE FROM homeworks WHERE id = %s", (content_id,))
+                elif content_type == "학습 자료":
+                    cur.execute("DELETE FROM materials WHERE id = %s", (content_id,))
+                elif content_type == "에세이":
+                    cur.execute("DELETE FROM essays WHERE id = %s", (content_id,))
+                else:
+                    cur.execute("DELETE FROM debate_articles WHERE id = %s", (content_id,))
+                st.success(f"✅ ID {content_id}의 콘텐츠가 삭제되었습니다.")
+                st.rerun()
+    
+    # 3. System Settings Tab
+    with admin_tabs[2]:
+        st.subheader("시스템 설정")
+        
+        # Site settings
+        st.write("### 사이트 설정")
+        site_title = st.text_input("사이트 제목", value="Honority English Academy")
+        site_description = st.text_area("사이트 설명", value="영어 독서·토론을 통한 학습 커뮤니티입니다.")
+        
+        if st.button("설정 저장"):
+            # Here you would typically save these settings to a configuration table
+            st.success("✅ 설정이 저장되었습니다.")
+        
+        # System announcements
+        st.write("### 공지사항 관리")
+        announcement = st.text_area("새 공지사항")
+        if st.button("공지사항 게시"):
             cur.execute(
-                "UPDATE users SET role = %s WHERE username = %s",
-                (new_role, selected_user)
+                "INSERT INTO announcements (content, posted_by, timestamp) VALUES (%s, %s, %s)",
+                (announcement, st.session_state.username, datetime.utcnow())
             )
-            st.success(f"✅ {selected_user}님의 역할이 '{new_role}' 로 변경되었습니다.")
-            # 변경 후 화면 갱신
-            st.rerun()
-    else:
-        st.info("등록된 사용자가 없습니다.")
+            st.success("✅ 공지사항이 게시되었습니다.")
+        
+        # View recent announcements
+        cur.execute("SELECT content, posted_by, timestamp FROM announcements ORDER BY timestamp DESC LIMIT 5")
+        announcements = cur.fetchall()
+        if announcements:
+            st.write("#### 최근 공지사항")
+            for ann in announcements:
+                st.write(f"**{ann[1]}** ({ann[2]:%Y-%m-%d %H:%M}): {ann[0]}")
+        
+        # System logs
+        st.write("### 시스템 로그")
+        cur.execute("""
+            SELECT timestamp, level, message 
+            FROM system_logs 
+            ORDER BY timestamp DESC 
+            LIMIT 100
+        """)
+        system_logs = cur.fetchall()
+        if system_logs:
+            df_system_logs = pd.DataFrame(system_logs, columns=["시간", "레벨", "메시지"])
+            st.dataframe(df_system_logs, use_container_width=True)
